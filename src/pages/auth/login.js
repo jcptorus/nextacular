@@ -23,7 +23,7 @@ const Login = () => {
     setSubmittingState(true);
     const response = await signIn('email', { email, redirect: false });
 
-    if (response.error === null) {
+    if (response?.error === null) {
       toast.success(`Please check your email (${email}) for the login link.`, {
         duration: 5000,
       });
@@ -38,28 +38,24 @@ const Login = () => {
   };
 
   useEffect(() => {
-  (async () => {
-    const result = await getProviders();
+    (async () => {
+      const result = await getProviders();
 
-    // Si NextAuth ne retourne rien, on évite le crash
-    if (!result) {
-      setSocialProviders([]);
-      return;
-    }
+      // Empêche l’erreur si NextAuth retourne null ou undefined
+      if (!result) {
+        setSocialProviders([]);
+        return;
+      }
 
-    // On retire le provider "email" pour ne garder que les sociaux
-    const { email: emailProvider, ...providers } = result;
+      // On retire le provider email et on garde les sociaux
+      const { email: emailProvider, ...providers } = result;
 
-    const socials: any[] = [];
-    for (const key in providers) {
-      socials.push(providers[key]);
-    }
+      const socials = [];
+      for (const key in providers) {
+        socials.push(providers[key]);
+      }
 
-    setSocialProviders(socials);
-  })();
-}, []);
-
-      setSocialProviders([...socialProviders]);
+      setSocialProviders(socials);
     })();
   }, []);
 
