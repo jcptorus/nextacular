@@ -38,13 +38,26 @@ const Login = () => {
   };
 
   useEffect(() => {
-    (async () => {
-      const socialProviders = [];
-      const { email, ...providers } = await getProviders();
+  (async () => {
+    const result = await getProviders();
 
-      for (const provider in providers) {
-        socialProviders.push(providers[provider]);
-      }
+    // Si NextAuth ne retourne rien, on évite le crash
+    if (!result) {
+      setSocialProviders([]);
+      return;
+    }
+
+    // On retire le provider "email" pour ne garder que les sociaux
+    const { email: emailProvider, ...providers } = result;
+
+    const socials: any[] = [];
+    for (const key in providers) {
+      socials.push(providers[key]);
+    }
+
+    setSocialProviders(socials);
+  })();
+}, []);
 
       setSocialProviders([...socialProviders]);
     })();
