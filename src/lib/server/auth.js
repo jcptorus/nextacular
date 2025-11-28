@@ -6,6 +6,8 @@ import { html, text } from '@/config/email-templates/signin';
 import { emailConfig, sendMail } from '@/lib/server/mail';
 import { createPaymentAccount, getPayment } from '@/prisma/services/customer';
 
+const isProd = process.env.NODE_ENV === 'production';
+
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
   callbacks: {
@@ -22,7 +24,7 @@ export const authOptions = {
       return session;
     },
   },
-  debug: !(process.env.NODE_ENV === 'production'),
+  debug: !isProd,
   events: {
     signIn: async ({ user, isNewUser }) => {
       const customerPayment = await getPayment(user.email);
@@ -36,7 +38,19 @@ export const authOptions = {
     EmailProvider({
       from: process.env.EMAIL_FROM,
       server: emailConfig,
-      sendVerificationRequest: async ({ identifier: email, url }) => {
+
+      // 👇 ICI : hack dev pour Bolt
+      async sendVerificationRequest({ identifier: email, url }) {
+        if (!isProd) {
+          // MODE DEV (Bolt) : on LOG le lien au lieu d’envoyer un mail
+          console.log('========== MAGIC LOGIN LINK ==========');
+          console.log('Email demandé :', email);
+          console.log('URL de connexion :', url);
+          console.log('======================================');
+          return;
+        }
+
+        // MODE PROD : comportement normal (envoi d’email)
         const { host } = new URL(url);
         await sendMail({
           html: html({ email, url }),
